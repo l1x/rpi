@@ -29,6 +29,7 @@
   apt: name={{ item.name }} state=absent
   with_items:
     - { "name": snapd }
+    - { "name": unattended-upgrades }
   become: yes
 
 - name: Setting up /etc/default/locale
