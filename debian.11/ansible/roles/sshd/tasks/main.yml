@@ -1,0 +1,13 @@
+---
+- name: Rendering templates
+  template: src={{ item.name }}.j2 dest={{ item.path }} owner=root group=root mode=0644
+  with_items:
+    - { "name": sshd_config, "path": /etc/ssh/sshd_config }
+  become: yes
+
+- name: Make sure SSHD is re-started
+  service:
+    name: sshd
+    state: restarted
+    enabled: yes
+  become: yes

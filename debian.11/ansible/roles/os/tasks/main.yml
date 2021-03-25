@@ -1,0 +1,124 @@
+---
+- name: Removing requiretty
+  lineinfile:
+    dest: "/etc/sudoers"
+    line: "Defaults    requiretty"
+    state: absent
+  become: yes
+  vars:
+    ansible_ssh_pipelining: no
+
+- name: Disable wifi & bt
+  lineinfile:
+    dest: /boot/firmware/usercfg.txt
+    line: "{{ item }}"
+    state: present
+    create: yes
+  with_items:
+    - "dtoverlay=pi3-disable-wifi"
+    - "dtoverlay=pi3-disable-bt"
+  become: yes
+
+- name: Disable wpa_supplicant
+  service:
+    name: wpa_supplicant
+    state: stopped
+    enabled: no
+  become: yes
+
+- name: Removing things we do not need
+  apt: name={{ item.name }} state=absent
+  with_items:
+    - { "name": snapd }
+    - { "name": unattended-upgrades }
+  become: yes
+
+- name: Setting hostname
+  template: src={{ item.name }}.j2 dest={{ item.path }} owner=root group=root mode=0644
+  with_items:
+    - { "name": hostname, "path": /etc/hostname }
+  become: yes
+
+- name: Setting up /etc/default/locale
+  lineinfile:
+    dest: "/etc/default/locale"
+    line: "{{ item.line }}"
+    state: present
+    create: yes
+  with_items:
+    - { "line": "LANG=en_US.utf-8" }
+  become: yes
+
+- name: Check if tools are installed
+  stat: path={{ item.path }}
+  with_items:
+    - { "name": mlocate, "path": /usr/bin/mlocate }
+    - { "name": vim, "path": /usr/bin/vim }
+    - { "name": tmux, "path": /usr/bin/tmux }
+    - { "name": net-tools, "path": /usr/sbin/ifconfig }
+    - { "name": bind9-host, "path": /usr/bin/host }
+    - { "name": chrony, "path": /usr/sbin/chronyd }
+    - { "name": mc, "path": /usr/bin/mc }
+  register: tools_installed
+  become: yes
+
+- name: Installing tools
+  apt: name={{ item.item.name }} state=present
+  with_items: "{{ tools_installed.results }}"
+  when: item.stat.exists == false
+  become: yes
+
+- name: Rendering templates
+  template: src={{ item.name }}.j2 dest={{ item.path }} owner=root group=root mode=0644
+  with_items:
+    - { "name": chrony.conf, "path": /etc/chrony.conf }
+    - { "name": limits.conf, "path": /etc/security/limits.conf }
+  become: yes
+
+- name: Removing limits.d
+  file: path=/etc/security/limits.d state=absent
+  become: yes
+
+- name: Make sure Chrony is started up
+  service:
+    name: chronyd
+    state: started
+    enabled: yes
+  become: yes
+
+- name: Disables ipv6 (sysctl)
+  sysctl: name={{ item.name }} value={{ item.value }} state=present sysctl_set=yes reload=yes
+  become: yes
+  with_items:
+    - { "name": net.ipv6.conf.all.disable_ipv6, "value": 1 }
+    - { "name": net.ipv6.conf.default.disable_ipv6, "value": 1 }
+    - { "name": net.ipv6.conf.lo.disable_ipv6, "value": 1 }
+    - { "name": net.ipv6.conf.eth0.disable_ipv6, "value": 1 }
+
+- name: Rendering sysctl
+  sysctl: name={{ item.name }} value={{ item.value }} state=present
+  with_items:
+    - { "name": vm.swappiness, "value": 5 }
+    - { "name": net.core.rmem_max, "value": 16777216 }
+    - { "name": net.core.wmem_max, "value": 16777216 }
+    - { "name": net.ipv4.tcp_rmem, "value": "4096 87380 16777216" }
+    - { "name": net.ipv4.tcp_wmem, "value": "4096 87380 16777216" }
+    - { "name": net.ipv4.tcp_tw_reuse, "value": 1 }
+    - { "name": net.ipv4.tcp_fin_timeout, "value": 30 }
+    - { "name": net.ipv4.tcp_syncookies, "value": 1 }
+    - { "name": vm.max_map_count, "value": 262144 }
+  become: yes
+
+- name: Updating system
+  command: /usr/bin/apt update
+  args:
+    warn: false
+  become: yes
+
+- name: Check ntp
+  shell: chronyc sources
+  register: chronyc_sources_results
+
+- name: Output ntp
+  debug:
+    var: chronyc_sources_results.stdout_lines
