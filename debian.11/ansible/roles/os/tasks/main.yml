@@ -27,7 +27,9 @@
   become: yes
 
 - name: Removing things we do not need
-  apt: name={{ item.name }} state=absent
+  apt:
+    name: {{ item.name }}
+    state: absent
   with_items:
     - { "name": snapd }
     - { "name": unattended-upgrades }

@@ -1,0 +1,7 @@
+- hosts: all
+  remote_user: l1x
+  vars:
+    gopath: /home/l1x/go
+    hashicorp_path: src/github.com/hashicorp
+  roles:
+    - role: nomad

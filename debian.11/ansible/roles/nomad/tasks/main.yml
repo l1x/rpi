@@ -1,0 +1,53 @@
+- name: Checking GOPATH
+  raw: test -e "{{ gopath }}" && echo true || echo false
+  register: gopath_exists
+
+- name: Creating GOPATH
+  file:
+    path: "{{ gopath }}"
+    state: directory
+  when: gopath_exists == false
+
+- name: Checking Hashicorp folder
+  raw: test -e "{{ gopath }}/{{ hashicorp_path }}" && echo true || echo false
+  register: hashicorp_folder_exists
+
+- name: Creating Hashicorp folder
+  file:
+    path: "{{ gopath }}/{{ hashicorp_path }}"
+    state: directory
+  when: hashicorp_folder_exists == false
+
+- name: Installing Git
+  apt:
+    name: ['golang-go', 'git', 'make', 'gcc']
+    state: present
+  become: yes
+
+- name: Check if repo is already cloned
+  raw: test -e "{{ gopath }}/{{ hashicorp_path }}" && echo true || echo false
+  register: hashicorp_repo_cloned
+
+- name: Cloning repo
+  git:
+    repo: https://github.com/hashicorp/nomad.git
+    dest: "{{ gopath }}/{{ hashicorp_path }}/nomad"
+    version: 149b150fb2d87766b8462346d68b72831f622047 # version 1.0.4
+  when: hashicorp_repo_cloned == false
+
+- name: Bootstraping Nomad
+  make:
+    chdir: "{{ gopath }}/{{ hashicorp_path }}/nomad"
+    target: bootstrap
+    params:
+      NUM_THREADS: 4
+
+- name: Compiling Nomad
+  make:
+    chdir: "{{ gopath }}/{{ hashicorp_path }}/nomad"
+    target: dev
+    params:
+      NUM_THREADS: 4
+
+- name: Test the binary
+  command: "{{ gopath }}/pkg/linux_arm64/nomad"
