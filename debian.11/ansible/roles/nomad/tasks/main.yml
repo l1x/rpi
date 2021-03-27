@@ -35,19 +35,30 @@
     version: 149b150fb2d87766b8462346d68b72831f622047 # version 1.0.4
   when: hashicorp_repo_cloned == false
 
+- name: Check if repo is already cloned
+  raw: test -e "{{ gopath }}/bin/nomad" && echo true || echo false
+  register: nomad_alread_built
+
 - name: Bootstraping Nomad
   make:
     chdir: "{{ gopath }}/{{ hashicorp_path }}/nomad"
     target: bootstrap
     params:
-      NUM_THREADS: 4
+      NUM_THREADS: 2
+  when: nomad_alread_built == false
 
 - name: Compiling Nomad
   make:
     chdir: "{{ gopath }}/{{ hashicorp_path }}/nomad"
     target: dev
     params:
-      NUM_THREADS: 4
+      NUM_THREADS: 2
+  when: nomad_alread_built == false
 
 - name: Test the binary
-  command: "{{ gopath }}/pkg/linux_arm64/nomad"
+  command: "{{ gopath }}/bin/nomad -version"
+  register: nomad_version
+
+- debug: msg="{{ nomad_version.stdout }}"
+
+- debug: msg="{{ nomad_version.stderr }}"
