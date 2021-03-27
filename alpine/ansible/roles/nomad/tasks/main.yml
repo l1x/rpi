@@ -21,8 +21,8 @@
   when: hashicorp_dir.stat.exists is false
 
 - name: Installing Git
-  apt:
-    name: ['golang-go', 'git', 'make', 'gcc']
+  apk:
+    name: ['go', 'git', 'make', 'gcc']
     state: present
   become: yes
 
