@@ -3,5 +3,6 @@
   vars:
     gopath: /home/l1x/go
     hashicorp_path: src/github.com/hashicorp
+    nomad_home: /opt/nomad
   roles:
     - role: nomad

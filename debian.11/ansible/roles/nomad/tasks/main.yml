@@ -69,3 +69,66 @@
 - debug: msg="{{ nomad_version.stdout }}"
 
 - debug: msg="{{ nomad_version.stderr }}"
+
+- name: Creating nomad group
+  group:
+    name: nomad
+    state: present
+  become: yes
+
+- name: Creating nomad user
+  user:
+    name: nomad
+    shell: /sbin/nologin
+    groups: nomad
+  become: yes
+
+- name: Checking Nomad home dir
+  stat:
+    path: "{{ nomad_home }}"
+  register: nomad_dir
+  become: yes
+
+- name: Creating Nomad home dir and subfolders
+  file:
+    path: "{{ nomad_home }}/{{ item }}"
+    state: directory
+    owner: nomad
+    group: nomad
+    mode: 0750
+  loop:
+    - bin
+    - etc
+    - data
+  when: nomad_dir.stat.exists is false
+  become: yes
+
+- name: Checking Nomad binary in home folder
+  stat:
+    path: "{{ nomad_home }}/bin/nomad"
+  register: nomad_binary
+  become: yes
+
+- name: Copying nomad binary
+  copy:
+    src: "{{ gopath }}/bin/nomad"
+    dest: "{{ nomad_home }}/bin/nomad"
+    owner: nomad
+    group: nomad
+    mode: u+rwx,g-wx,o-rwx
+    remote_src: yes
+  become: yes
+
+- name: Rendering templates
+  template: src={{ item.name }}.j2 dest={{ item.path }} owner=root group=root mode=0444
+  with_items:
+    - { "name": nomad.service, "path": /etc/systemd/system/nomad.service }
+    - { "name": server.hcl, "path": /opt/nomad/etc/server.hcl }
+  become: yes
+
+- name: Enabling and starting Nomad
+  service:
+    name: nomad
+    state: started
+    enabled: yes
+  become: yes
