@@ -28,11 +28,8 @@
 
 - name: Removing things we do not need
   apt:
-    name: {{ item.name }}
+    name: [ 'snapd', 'unattended-upgrades' ]
     state: absent
-  with_items:
-    - { "name": snapd }
-    - { "name": unattended-upgrades }
   become: yes
 
 - name: Setting hostname
