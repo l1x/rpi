@@ -124,6 +124,7 @@
   with_items:
     - { "name": nomad.service, "path": /etc/systemd/system/nomad.service }
     - { "name": server.hcl, "path": /opt/nomad/etc/server.hcl }
+    - { "name": client.hcl, "path": /opt/nomad/etc/client.hcl }
   become: yes
 
 - name: Enabling and starting Nomad

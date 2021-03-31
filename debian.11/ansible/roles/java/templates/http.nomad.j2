@@ -1,0 +1,32 @@
+job "hello-nomad" {
+
+  datacenters = ["dc1"]
+
+  task "web" {
+
+    driver = "java"
+
+    config {
+      jar_path    = "nomad/hello.jar"
+      jvm_options = ["-Xmx128m"]
+      pid_mode    = "private"
+      args        = ["-p", "8080", "/"]
+    }
+
+    artifact {
+      source = "https://github.com/zathras/simples/releases/download/1.0.0/simples.jar"
+      destination = "nomad/"
+
+      options {
+        checksum = "md5:475139c4dc271eb03307652c6c82f47c"
+      }
+
+    }
+
+    resources {
+      cpu    = 1000 # MHz
+      memory = 512 # MB
+    }
+
+  }
+}

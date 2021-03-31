@@ -1,10 +1,12 @@
 datacenter = "dc1"
-data_dir = "/opt/nomad"
+data_dir = "/opt/nomad/data"
+
+log_level = "DEBUG"
 
 server {
   enabled = true
   bootstrap_expect = 3
   server_join {
-    retry_join = ["rpi4-2.lan"]
+    retry_join = ["rpi4-2.lan", "rpi3-0.lan", "rpi3-1.lan"]
   }
 }
