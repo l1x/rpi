@@ -10,7 +10,7 @@
 
 - name: Disable wifi & bt
   lineinfile:
-    dest: /boot/firmware/usercfg.txt
+    dest: /boot/firmware/config.txt
     line: "{{ item }}"
     state: present
     create: yes
@@ -70,8 +70,9 @@
 - name: Rendering templates
   template: src={{ item.name }}.j2 dest={{ item.path }} owner=root group=root mode=0644
   with_items:
-    - { "name": chrony.conf, "path": /etc/chrony.conf }
-    - { "name": limits.conf, "path": /etc/security/limits.conf }
+    - { "name": chrony.conf,  "path": /etc/chrony.conf                }
+    - { "name": limits.conf,  "path": /etc/security/limits.conf       }
+    - { "name": nodoc,        "path": /etc/dpkg/dpkg.cfg.d/01_nodoc   }
   become: yes
 
 - name: Removing limits.d

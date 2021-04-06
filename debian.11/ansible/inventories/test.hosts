@@ -1,4 +1,2 @@
 [all]
-rpi3-0.lan
-rpi3-1.lan
-rpi4-2.lan
+rpi4-3.lan ansible_become_method=doas
