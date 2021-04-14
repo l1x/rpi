@@ -1,0 +1,5 @@
+- name: Adding packages
+  apt:
+    name: [ 'bpfcc-tools', "linux-headers-{{ ansible_kernel }}" ]
+    state: present
+  become: yes
