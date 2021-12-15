@@ -8,16 +8,16 @@
   vars:
     ansible_ssh_pipelining: no
 
-- name: Disable wifi & bt
-  lineinfile:
-    dest: /boot/firmware/config.txt
-    line: "{{ item }}"
-    state: present
-    create: yes
-  with_items:
-    - "dtoverlay=pi3-disable-wifi"
-    - "dtoverlay=pi3-disable-bt"
-  become: yes
+# - name: Disable wifi & bt
+#   lineinfile:
+#     dest: /boot/firmware/config.txt
+#     line: "{{ item }}"
+#     state: present
+#     create: yes
+#   with_items:
+#     - "dtoverlay=pi3-disable-wifi"
+#     - "dtoverlay=pi3-disable-bt"
+#   become: yes
 
 - name: Disable wpa_supplicant
   service:
@@ -58,6 +58,7 @@
     - { "name": bind9-host, "path": /usr/bin/host }
     - { "name": chrony, "path": /usr/sbin/chronyd }
     - { "name": mc, "path": /usr/bin/mc }
+    - { "name": fish, "path": /usr/bin/fish }
   register: tools_installed
   become: yes
 
@@ -70,9 +71,11 @@
 - name: Rendering templates
   template: src={{ item.name }}.j2 dest={{ item.path }} owner=root group=root mode=0644
   with_items:
-    - { "name": chrony.conf,  "path": /etc/chrony.conf                }
-    - { "name": limits.conf,  "path": /etc/security/limits.conf       }
-    - { "name": nodoc,        "path": /etc/dpkg/dpkg.cfg.d/01_nodoc   }
+    - { "name": chrony.conf,  "path": /etc/chrony.conf                  }
+    - { "name": limits.conf,  "path": /etc/security/limits.conf         }
+    - { "name": nodoc,        "path": /etc/dpkg/dpkg.cfg.d/01_nodoc     }
+    - { "name": apt.apt,      "path": /etc/apt/apt.conf.d/99iwinhahaha  }
+    - { "name": tmux.conf,    "path": /home/apt/apt.conf.d/99iwinhahaha  }
   become: yes
 
 - name: Removing limits.d
@@ -93,7 +96,6 @@
     - { "name": net.ipv6.conf.all.disable_ipv6, "value": 1 }
     - { "name": net.ipv6.conf.default.disable_ipv6, "value": 1 }
     - { "name": net.ipv6.conf.lo.disable_ipv6, "value": 1 }
-    - { "name": net.ipv6.conf.eth0.disable_ipv6, "value": 1 }
 
 - name: Rendering sysctl
   sysctl: name={{ item.name }} value={{ item.value }} state=present
@@ -114,6 +116,22 @@
   args:
     warn: false
   become: yes
+
+- name: set timezone to Europe/Budapest
+  timezone:
+    name: Europe/Budapest
+  become: yes
+
+- name: Remove packages we do not need anymore
+  apt:
+    pkg: [ sudo ]
+    state: absent
+  become: true
+
+- name: Set login shell of user {{ ansible_env.USER }}
+  ansible.builtin.command: usermod --shell /usr/bin/fish {{ ansible_env.USER }}
+  changed_when: false
+  become: true
 
 - name: Check ntp
   shell: chronyc sources

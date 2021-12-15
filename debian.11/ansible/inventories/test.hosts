@@ -1,2 +1,9 @@
-[all]
+[rpi4-3]
 rpi4-3.lan ansible_become_method=doas
+
+[deby]
+deby.lan ansible_become_method=doas
+
+[all]
+rpi4-3
+deby
