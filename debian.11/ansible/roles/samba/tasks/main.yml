@@ -14,5 +14,14 @@
 - name: Rendering Samba template
   template: src={{ item.name }}.j2 dest={{ item.path }} owner=root group=root mode=0644
   with_items:
-    - { "name": smb.conf, "path": /etc/smb.conf }
+    - { "name": smb.conf, "path": /etc/samba/smb.conf }
   become: yes
+
+- name: Restarting Samba
+  ansible.builtin.systemd:
+    name: smbd
+    state: restarted
+    enabled: yes
+  become: yes
+
+
