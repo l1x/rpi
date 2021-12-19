@@ -1,11 +1,20 @@
-- name: Installing JRE
-  tasks:
-    - debug: msg="Installing JRE"
-    - include: jre.yml
-  when: java_jre_package_name | bool
+---
 
-- name: Installing JDK
-  tasks:
-    - debug: msg="Installing JDE"
-    - include: jdk.yml
-  when: java_jdk_package_name | bool
+# Installing JRE
+
+- name: Including JRE
+  import_role:
+    name: java
+    tasks_from: jre
+  when: java_jre_package_name is defined
+
+# # Installing JDK
+
+- name: Including JDK
+  import_role:
+    name: java
+    tasks_from: jdk
+  when: java_jdk_package_name is defined
+
+# END
+
