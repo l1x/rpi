@@ -74,12 +74,31 @@
 
 # Since we are doing this in the automation the chance that
 # there is a another package re-creating it is pretty low
+# we need to recreate it afterward because systemd is developed by
+# mentally challenged monkeys
 - name: Removing /etc/sysctl.d/
   ansible.builtin.file:
     path: /etc/sysctl.d/
     state: absent
   become: yes
 
+- name: Creating /etc/sysctl.d/
+  ansible.builtin.file:
+    path: /etc/sysctl.d/
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+  become: yes
+
+- name: Create a symbolic link /etc/sysctl.d/99-sysctl.conf -> /etc/sysctl.conf
+  ansible.builtin.file:
+    src: /etc/sysctl.conf
+    dest: /etc/sysctl.d/99-sysctl.conf
+    owner: root
+    group: root
+    state: link
+  become: yes
 
 - name: Rendering templates
   template: src={{ item.name }}.j2 dest={{ item.path }} owner=root group=root mode=0644
@@ -90,6 +109,19 @@
     - { "name": apt.apt,      "path": /etc/apt/apt.conf.d/99iwinhahaha  }
     - { "name": tmux.conf,    "path": /etc/tmux.conf  }
     - { "name": sysctl.conf,  "path": /etc/sysctl.conf  }
+  become: yes
+
+
+- name: Rendering Grub config
+  template: src={{ item.name }}.j2 dest={{ item.path }} owner=root group=root mode=0644
+  with_items:
+    - { "name": grub.conf,  "path": /etc/default/grub }
+  register: grub_config
+  become: yes
+
+- name: Updating Grub (boot) config
+  command: update-grub
+  when: grub_config.changed
   become: yes
 
 - name: Removing limits.d
