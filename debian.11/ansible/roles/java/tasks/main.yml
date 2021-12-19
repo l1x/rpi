@@ -1,15 +1,11 @@
-- name: Installing Java
-  apt:
-    name: ['default-jdk']
-    state: present
-  become: yes
+- name: Installing JRE
+  tasks:
+    - debug: msg="Installing JRE"
+    - include: jre.yml
+  when: java_jre_package_name | bool
 
-- name: Deploying nomad job
-  template: src={{ item.name }}.j2 dest={{ item.path }} owner=root group=root mode=0444
-  with_items:
-    - { "name": nomad.service, "path": /etc/systemd/system/nomad.service }
-    - { "name": server.hcl, "path": /opt/nomad/etc/server.hcl }
-    - { "name": client.hcl, "path": /opt/nomad/etc/client.hcl }
-  become: yes
-
-- name: Deploying JAR
+- name: Installing JDK
+  tasks:
+    - debug: msg="Installing JDE"
+    - include: jdk.yml
+  when: java_jdk_package_name | bool

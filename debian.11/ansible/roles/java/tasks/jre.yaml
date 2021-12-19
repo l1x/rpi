@@ -1,0 +1,6 @@
+- name: Installing Java JRE
+  apt:
+    name: {{ java_jre_package_name }}
+    state: present
+  become: yes
+  when: ansible_selinux.status == "enabled"
