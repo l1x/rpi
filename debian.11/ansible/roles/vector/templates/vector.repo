@@ -1,0 +1,9 @@
+# Source: Timber
+# Site: https://vector.dev
+# Repository: Timber / vector
+# Description: Take Control Of Your Observability Data with Vector, hosted by Cloudsmith.
+
+
+deb https://repositories.timber.io/public/vector/deb/debian bullseye main
+
+deb-src https://repositories.timber.io/public/vector/deb/debian bullseye main

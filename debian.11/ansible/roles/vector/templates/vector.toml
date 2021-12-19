@@ -1,0 +1,29 @@
+data_dir = "/var/lib/vector"
+
+[api]
+enabled = true
+address = "127.0.0.1:8686"
+
+[sources.chrony]
+type = "journald"
+current_boot_only = true
+include_units = [ "chrony" ]
+
+
+[transforms.chrony]
+inputs = ["chrony"]
+type   = "remap"
+source = '''
+. = parse_grok(.message, "%{SYSLOGTIMESTAMP:timestamp} %{HOSTNAME:hostname} %{GREEDYDATA:message}")
+'''
+
+
+[sinks.s3_archives]
+inputs          = ["chrony"]
+type            = "aws_s3"
+region          = "eu-west-1"
+bucket          = "o-hai"
+key_prefix      = "date=%Y-%m-%d"      # daily partitions, hive friendly format
+compression     = "gzip"               # compress final objects
+encoding        = "ndjson"             # new line delimited JSON
+batch.max_bytes = 10000000             # 10mb uncompressed

@@ -1,0 +1,12 @@
+- name: Rendering Vector repo template
+  template: src={{ item.name }} dest={{ item.path }} owner=root group=root mode=0644
+  with_items:
+    - { "name": vector.repo, "path": /etc/apt/sources.list.d/vector.list }
+    - { "name": vector.toml, "path": /etc/vector/vector.toml }
+  become: yes
+
+- name: Installing Vector
+  apt:
+    name: vector
+    state: present
+  become: yes
