@@ -1,0 +1,27 @@
+- name: Downloading keyring
+  get_url:
+    url: https://brave-browser-apt-release.s3.brave.com/brave-browser-archive-keyring.gpg
+    dest: /usr/share/keyrings/brave-browser-archive-keyring.gpg
+    mode: '0444'
+    owner: root
+    group: root
+  become: yes
+
+- name: Rendering template
+  template: src={{ item.name }}.j2 dest={{ item.path }} owner=root group=root mode=0444
+  with_items:
+    - { "name": brave-browser-release.list,  "path": /etc/apt/sources.list.d/brave-browser-release.list }
+  register: brave_source
+  become: yes
+
+- name: APT update
+  shell: apt update
+  when: brave_source.changed
+  become: yes
+
+- name: Installing Brave
+  apt:
+    name: brave-browser
+    state: present
+  become: yes
+

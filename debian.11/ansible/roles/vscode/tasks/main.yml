@@ -1,0 +1,36 @@
+- name: Downloading keyring
+  get_url:
+    url: https://packages.microsoft.com/keys/microsoft.asc
+    dest: /tmp/microsoft.asc
+
+- name: APT update
+  shell: gpg --yes --dearmor /tmp/microsoft.asc
+
+- name: Copy keyring
+  copy:
+    src: /tmp/microsoft.asc.gpg
+    dest: /etc/apt/trusted.gpg.d/packages.microsoft.gpg
+    owner: root
+    group: root
+    mode: '0444'
+    remote_src: yes
+  become: yes
+
+- name: Rendering template
+  template: src={{ item.name }}.j2 dest={{ item.path }} owner=root group=root mode=0444
+  with_items:
+    - { "name": vscode.list,  "path": /etc/apt/sources.list.d/vscode.list }
+  register: vscode_list
+  become: yes
+
+- name: APT update
+  shell: apt update
+  when: vscode_list.changed
+  become: yes
+
+- name: Installing VSCode
+  apt:
+    name: code
+    state: present
+  become: yes
+

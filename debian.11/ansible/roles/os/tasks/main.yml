@@ -8,17 +8,6 @@
   vars:
     ansible_ssh_pipelining: no
 
-# - name: Disable wifi & bt
-#   lineinfile:
-#     dest: /boot/firmware/config.txt
-#     line: "{{ item }}"
-#     state: present
-#     create: yes
-#   with_items:
-#     - "dtoverlay=pi3-disable-wifi"
-#     - "dtoverlay=pi3-disable-bt"
-#   become: yes
-
 - name: Disable wpa_supplicant
   service:
     name: wpa_supplicant
@@ -66,7 +55,9 @@
   become: yes
 
 - name: Installing tools
-  apt: name={{ item.item.name }} state=present
+  apt:
+    name: {{ item.item.name }}
+    state: present
   with_items: "{{ tools_installed.results }}"
   when: item.stat.exists == false
   become: yes
@@ -107,10 +98,17 @@
     - { "name": limits.conf,  "path": /etc/security/limits.conf         }
     - { "name": nodoc,        "path": /etc/dpkg/dpkg.cfg.d/01_nodoc     }
     - { "name": apt.apt,      "path": /etc/apt/apt.conf.d/99iwinhahaha  }
-    - { "name": tmux.conf,    "path": /etc/tmux.conf  }
-    - { "name": sysctl.conf,  "path": /etc/sysctl.conf  }
+    - { "name": tmux.conf,    "path": /etc/tmux.conf                    }
+    - { "name": sysctl.conf,  "path": /etc/sysctl.conf                  }
+    - { "name": sources.list, "path": /etc/apt/sources.list             }
   become: yes
 
+- name: Adding IWL driver
+  apt:
+    name: firmware-iwlwifi
+    state: present
+  # when: TODO
+  become: yes
 
 - name: Rendering Grub config
   template: src={{ item.name }}.j2 dest={{ item.path }} owner=root group=root mode=0644
