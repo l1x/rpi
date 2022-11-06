@@ -6,7 +6,7 @@ server 3.europe.pool.ntp.org
 driftfile /var/lib/chrony/drift
 makestep 1.0 3
 rtcsync
-allow 192.168.1.0/16
+allow 10.10.10.0/24
 keyfile /etc/chrony/chrony.keys
 
 logdir /var/log/chrony

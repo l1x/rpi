@@ -1,0 +1,21 @@
+- name: Check if tools are installed
+  stat: path={{ item.path }}
+  with_items:
+    - { "name": dnsmasq, "path": /usr/sbin/dnsmasq }
+  register: dnsmasq_installed
+  become: yes
+
+- name: Installing dnsmasq
+  apt:
+    name: "{{ item.item.name }}"
+    state: present
+  with_items: "{{ dnsmasq_installed.results }}"
+  when: item.stat.exists == false
+  become: yes
+
+- name: Rendering templates
+  template: src={{ item.name }}.j2 dest={{ item.path }} owner=root group=root mode=0644
+  with_items:
+    - { "name": dnsmasq.conf, "path": /etc/dnsmasq.conf}
+    - { "name": hosts, "path": /etc/hosts}
+  become: yes
